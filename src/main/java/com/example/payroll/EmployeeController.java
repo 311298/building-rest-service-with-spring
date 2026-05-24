@@ -1,10 +1,12 @@
 package com.example.payroll;
 
 import lombok.AllArgsConstructor;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/employees")
@@ -12,17 +14,23 @@ import java.util.List;
 public class EmployeeController {
 
     private final EmployeeService service;
+    private final EmployeeModelAssembler assembler;
 
     @GetMapping()
-    public ResponseEntity<List<Employee>> all() {
-        return ResponseEntity.ok(service.all());
+    public ResponseEntity<List<EntityModel<Employee>>> all() {
+        return ResponseEntity.ok(
+                service.all()
+                        .stream()
+                        .map(assembler::toModel)
+                        .collect(Collectors.toList())
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Employee> one(
+    public ResponseEntity<EntityModel<Employee>> one(
             @PathVariable Long id
     ) {
-        return ResponseEntity.ok(service.one(id));
+        return ResponseEntity.ok(assembler.toModel(service.one(id)));
     }
 
     @PostMapping()
